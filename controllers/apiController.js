@@ -8,53 +8,24 @@ module.exports = {
     //Return movie list by title
     async getMoviesByTitle(req, res) {
 
-        const regex_title = new RegExp(req.query.title, 'i') // i for case insensitive
-
+        // configure regex to search by title contain query
+        // i for case insensitive
+        const regex_title = new RegExp(req.query.title, 'i')
         const { page = 1, limit = 10 } = req.query;
 
         try {
-            // execute query with page and limit values
-            const movies = await Movie.aggregate([
-                {
-                    $match: {
-                        title: { $regex: regex_title }
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "links",
-                        localField: "movieId",
-                        foreignField: "movieId",
-                        as: "links"
-                    }
-                },
-                // {
-                //     $unwind:"$links"
-                // },
-                //     {$lookup:{
-                //     from:"ratings",
-                //     localField:"links.movieId",
-                //     foreignField:"movieId",
-                //     as:"ratings"
-                // }},
-                // {
-                //     $unwind:"$ratings"
-                // },
+            await Movie.find({
+                title: { $regex: regex_title }
+            })
+                .skip(parseInt(page))
+                .limit(parseInt(limit))
+                .then(function (movies) {
+                    res.status(200).send({ movies, page, limit });
+                });
 
-                {
-                    '$facet': {
-                        metadata: [{ $count: "total" }, { $addFields: { page: page } }],
-                        data: [{ $skip: (page - 1) * limit }, { $limit: limit * 1 }] // add projection here wish you re-shape the docs
-                    }
-                }
-            ])
-
-            // return response with posts, total pages, and current page
-            res.json({
-                movies
-            });
         } catch (err) {
-            console.error(err.message);
+            //response message error
+            return res.status(500).send(err);
         }
 
     },
@@ -91,33 +62,46 @@ module.exports = {
         const regex_year = new RegExp(parseInt(req.query.year), 'i')
         // i for case insensitive
         try {
-            const movies = await Movie.aggregate([{
-                $match: {
-                    title: { $regex: regex_year },
-                    genres: req.query.genres
-                },
-            },
-            {
-                $lookup: {
-                    from: "links",
-                    localField: "movieId",
-                    foreignField: "movieId",
-                    as: "links"
-                }
-            },
-            {
-                '$facet': {
-                    metadata: [{ $count: "total" }, { $addFields: { page: page } }],
-                    data: [{ $skip: (page - 1) * limit }, { $limit: limit * 1 }] // add projection here wish you re-shape the docs
-                }
-            }])
+            await Movie.find({
+                title: { $regex: regex_year },
+                genres: req.query.genres
+            })
+                .skip(parseInt(page))
+                .limit(parseInt(limit))
+                .then(function (movies) {
+                    // return response with posts, total pages, and current page
+                    res.status(200).send({ movies, page, limit });
+                });
 
-            // return response with posts, total pages, and current page
-            res.json({
-                movies
-            });
         } catch (err) {
-            console.error(err.message);
+            //return error response
+            return res.status(500).send(err);
+        }
+    },
+
+    async getMoviesRecents(req, res) {
+        const { page = 1, limit = 10 } = req.query;
+        var year = new Date().getFullYear
+        year = 2019
+        const regex_year = new RegExp((parseInt(year)), 'i')
+        // i for case insensitive
+        try {
+            await Movie.find({
+                title: { $regex: regex_year },
+
+            })
+                .skip(parseInt(page))
+                .limit(parseInt(limit))
+                .then(function (movies) {
+                    var totalpages = Math.ceil(count / page)
+
+                    // return response with posts, total pages, and current page
+                    res.status(200).send({ movies, page, limit });
+                });
+
+        } catch (err) {
+            //return error response
+            return res.status(500).send(err);
         }
     },
 
@@ -128,52 +112,21 @@ module.exports = {
         const { page = 1, limit = 10 } = req.query;
         const regex_rating = new RegExp(parseInt(req.query.rating), 'i') // i for case insensitive
         try {
-            const movies = await Rating.aggregate([{
-
-                //      $match: { 
-                //         rating: {$regex: regex_rating}
-                //    }
-                //   },
-                //   {$lookup:{
-                //         from:"links",
-                //         localField:"movieId",
-                //         foreignField:"movieId",
-                //         as:"links"
-                //     }},
-                //     {
-                //         $unwind:"$links"
-                //     },
-                // {
+            const movies = await Teste.aggregate([{
                 "$group": {
                     _id: "$movieId",
                     avg_rating: { $avg: "$rating" },
-                    soma:{$sum:1 }
+                    soma: { $sum: 1 }
                 },
                
                 
-
-            },
-            // {
-            //     $lookup: {
-
-            //         from: "links",
-            //         localField: "_id",
-            //         foreignField: "movieId",
-            //         as: "links"
-            //     },
-            // }
+                
+            }
 
 
-            // },
-            // {
-            //     $lookup: {
-            //         from: "movies",
-            //         localField: "_id",
-            //         foreignField: "movieId",
-            //         as: "movie"
 
-            //     }
-            // },
+                ,
+
             {
                 '$facet': {
                     metadata: [{ $count: "total" }, { $addFields: { page: page } }],

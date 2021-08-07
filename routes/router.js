@@ -13,5 +13,8 @@ router.get("/year",apiController.getMoviesByYearByGenres);
 
 router.get("/rating",apiController.getMoviesByRating);
 
+router.get("/recents",apiController.getMoviesRecents);
+
+
 
 module.exports = router;
