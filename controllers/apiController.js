@@ -1,10 +1,6 @@
 const Movie = require("../models/movie");
 const Rating = require("../models/rating");
-const Teste = require("../models/teste");
-const Link = require("../models/links");
-const MovieDB = require('node-themoviedb');
 
-const mdb = new MovieDB("c8743cbcc56f2bdad7006da6638f6bea");
 
 module.exports = {
 
@@ -63,167 +59,45 @@ module.exports = {
     //Return list movies by year and genres
     async getMoviesByYearByGenres(req, res) {
         const { page = 1, limit = 30 } = req.query;
-        const regex_year = new RegExp(parseInt(req.query.year), 'i')
-        // i for case insensitive
-        try {
-            await Movie.find({
-                title: { $regex: regex_year },
-                genres: req.query.genres
-            })
-                .skip(parseInt(page))
-                .limit(parseInt(limit))
-                .then(function (movies) {
-                    movies.forEach(function (movie) {
+        const regex_year = new RegExp(parseInt(req.query.year), 'i') // i for case insensitive
 
-                        movie.url_name = 'any string';
-                        console.log(movie.url_name);
-                    })
-                    // return response with posts, total pages, and current page
-                    res.status(200).send({ movies, page, limit });
-                });
 
-        } catch (err) {
-            //return error response
-            return res.status(500).send(err);
+        // return response with posts, total pages, and current page
+        if (req.query.year === undefined) {
+            try {
+                const movies = await Movie.find({
+                    genres: req.query.genres
+                }).skip(parseInt(page))
+                    .limit(parseInt(limit)).sort({ year: -1 })
+                // return response with posts, total pages, and current page
+                res.status(200).send({ movies, page, limit });
+
+
+            } catch (err) {
+                //return error response
+                return res.status(500).send(err);
+            }
         }
-    },
+        else {
 
-    async getMoviesRecents(req, res) {
-        const { page = 1, limit = 10 } = req.query;
-        var year = new Date().getFullYear
-        year = 2019
-        const regex_year = new RegExp((parseInt(year)), 'i')
-        // i for case insensitive
-        try {
-            const actionList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Action"
+            try {
+                const movies = await Movie.find({
+                    title: { $regex: regex_year },
+                    genres: req.query.genres
+                }).skip(parseInt(page))
+                    .limit(parseInt(limit))
 
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            
-            const adventureList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Adventure"
+                // return response with posts, total pages, and current page
+                res.status(200).send({ movies, page, limit });
 
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const animationList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Animation"
 
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            
-            const childrenList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Children"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const comedyList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Comedy"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            
-            const crimeList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Crime"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const documentaryList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Documentary"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            
-            const dramaList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Drama"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const fantasyList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Fantasy"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            
-            const filmNoirList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Film-Noir"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const horrorList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Horror"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            
-            const musicalList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Musical"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const mysteryList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Mystery"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            
-            const romanceList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Romance"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const sciFiList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Sci-Fi"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const thrillerList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Thriller"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            const warList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "War"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-            
-            const westernList = await Movie.find({
-                title: { $regex: regex_year },
-                genres: "Western"
-
-            }).skip(parseInt(page))
-            .limit(parseInt(limit))
-
-            // .skip(parseInt(page))
-            // .limit(parseInt(limit))
-            // .then(function (movies) {
-
-            // return response with posts, total pages, and current page
-            res.status(200).send({ recents: { actionList,adventureList,animationList,childrenList,comedyList,crimeList,documentaryList,dramaList,fantasyList,filmNoirList,horrorList,musicalList,mysteryList,romanceList,sciFiList,thrillerList,warList,westernList }, page, limit });
-            // });
-
-        } catch (err) {
-            //return error response
-            return res.status(500).send(err);
+            } catch (err) {
+                //return error response
+                return res.status(500).send(err);
+            }
         }
+
+
     },
 
     //Return list movies by rating
@@ -232,21 +106,13 @@ module.exports = {
         const { page = 1, limit = 10 } = req.query;
         const regex_rating = new RegExp(parseInt(req.query.rating), 'i') // i for case insensitive
         try {
-            const movies = await Teste.aggregate([{
+            const movies = await Rating.aggregate([{
                 "$group": {
                     _id: "$movieId",
                     avg_rating: { $avg: "$rating" },
                     soma: { $sum: 1 }
                 },
-
-
-
-            }
-
-
-
-                ,
-
+            },
             {
                 '$facet': {
                     metadata: [{ $count: "total" }, { $addFields: { page: page } }],
@@ -261,12 +127,6 @@ module.exports = {
         } catch (err) {
             console.error(err.message);
         }
-
-        // console.log("rating:" + req.query.rating)
-        // //const regex_rating = new RegExp(parseFloat(req.query.rating), 'i') // i for case insensitive
-        // Rating.find({ rating: req.query.rating }).sort({ 'timestamp': -1 }).limit(50).then(function (ratings) {
-        //     res.send(ratings);
-        // });
     },
 
 }
