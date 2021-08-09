@@ -95,18 +95,130 @@ module.exports = {
         const regex_year = new RegExp((parseInt(year)), 'i')
         // i for case insensitive
         try {
-            await Movie.find({
+            const actionList = await Movie.find({
                 title: { $regex: regex_year },
+                genres: "Action"
 
-            })
-                .skip(parseInt(page))
-                .limit(parseInt(limit))
-                .then(function (movies) {
-                    var totalpages = Math.ceil(count / page)
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            
+            const adventureList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Adventure"
 
-                    // return response with posts, total pages, and current page
-                    res.status(200).send({ movies, page, limit });
-                });
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const animationList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Animation"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            
+            const childrenList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Children"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const comedyList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Comedy"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            
+            const crimeList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Crime"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const documentaryList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Documentary"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            
+            const dramaList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Drama"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const fantasyList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Fantasy"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            
+            const filmNoirList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Film-Noir"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const horrorList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Horror"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            
+            const musicalList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Musical"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const mysteryList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Mystery"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            
+            const romanceList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Romance"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const sciFiList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Sci-Fi"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const thrillerList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Thriller"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            const warList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "War"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+            
+            const westernList = await Movie.find({
+                title: { $regex: regex_year },
+                genres: "Western"
+
+            }).skip(parseInt(page))
+            .limit(parseInt(limit))
+
+            // .skip(parseInt(page))
+            // .limit(parseInt(limit))
+            // .then(function (movies) {
+
+            // return response with posts, total pages, and current page
+            res.status(200).send({ recents: { actionList,adventureList,animationList,childrenList,comedyList,crimeList,documentaryList,dramaList,fantasyList,filmNoirList,horrorList,musicalList,mysteryList,romanceList,sciFiList,thrillerList,warList,westernList }, page, limit });
+            // });
 
         } catch (err) {
             //return error response
