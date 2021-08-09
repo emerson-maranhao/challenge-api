@@ -4,15 +4,14 @@ const router = express.Router();
 const apiController = require("../controllers/apiController");
 
 
-router.get("/movie",apiController.getMoviesByTitle);
+router.get("/movie/title",apiController.getMoviesByTitle);
 
 router.get("/movie/genres",apiController.getGenres);
 
-router.get("/movie",apiController.getMoviesByYearByGenres);
+router.get("/movie/year/genre",apiController.getMoviesByYearByGenres);
 
-router.get("/movie",apiController.getMoviesByRating);
+router.get("/movie/rating",apiController.getMoviesByRating);
 
-router.get("/movie",apiController.getMoviesRecents);
 
 
 
