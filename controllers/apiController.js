@@ -14,7 +14,7 @@ module.exports = {
         // configure regex to search by title contain query
         // i for case insensitive
         const regex_title = new RegExp(req.query.title, 'i')
-        const { page = 1, limit = 10 } = req.query;
+        const { page = 1, limit = 30 } = req.query;
 
         try {
             await Movie.find({
@@ -62,7 +62,7 @@ module.exports = {
 
     //Return list movies by year and genres
     async getMoviesByYearByGenres(req, res) {
-        const { page = 1, limit = 10 } = req.query;
+        const { page = 1, limit = 30 } = req.query;
         const regex_year = new RegExp(parseInt(req.query.year), 'i')
         // i for case insensitive
         try {
@@ -225,7 +225,6 @@ module.exports = {
             return res.status(500).send(err);
         }
     },
-
 
     //Return list movies by rating
     async getMoviesByRating(req, res) {

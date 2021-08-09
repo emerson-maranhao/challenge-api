@@ -1,19 +1,18 @@
 const express = require ("express");
-const router = express.Router();// importa controlador 'apiController.js' da pasta: 
+const router = express.Router();
 // ‘../controllers/apiController’
 const apiController = require("../controllers/apiController");
-// url do teste será: http://localhost:5000/api/teste
 
 
-router.get("/title",apiController.getMoviesByTitle);
+router.get("/movie",apiController.getMoviesByTitle);
 
-router.get("/genres",apiController.getGenres);
+router.get("/movie/genres",apiController.getGenres);
 
-router.get("/year",apiController.getMoviesByYearByGenres);
+router.get("/movie",apiController.getMoviesByYearByGenres);
 
-router.get("/rating",apiController.getMoviesByRating);
+router.get("/movie",apiController.getMoviesByRating);
 
-router.get("/recents",apiController.getMoviesRecents);
+router.get("/movie",apiController.getMoviesRecents);
 
 
 
