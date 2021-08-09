@@ -2,6 +2,9 @@ const Movie = require("../models/movie");
 const Rating = require("../models/rating");
 const Teste = require("../models/teste");
 const Link = require("../models/links");
+const MovieDB = require('node-themoviedb');
+
+const mdb = new MovieDB("c8743cbcc56f2bdad7006da6638f6bea");
 
 module.exports = {
 
@@ -32,27 +35,28 @@ module.exports = {
 
     //Return genre list to use in dropdown
     async getGenres(req, res) {
-        var genres = ({
-            '1': 'Action',
-            '2': 'Adventure',
-            '3': 'Animation',
-            '4': 'Children',
-            '5': 'Comedy',
-            '6': 'Crime',
-            '7': 'Documentary',
-            '8': 'Drama',
-            '9': 'Fantasy',
-            '10': 'Film-Noir',
-            '11': 'Horror',
-            '12': 'Musical',
-            '13': 'Mystery',
-            '14': 'Romance',
-            '15': 'Sci-Fi',
-            '16': 'Thriller',
-            '17': 'War',
-            '18': 'Western',
-        });
-        res.send(genres)
+        var genres = ([
+            { id: 1, name: 'Action' },
+            { id: 2, name: 'Adventure' },
+            { id: 3, name: 'Animation' },
+            { id: 4, name: 'Children' },
+            { id: 5, name: 'Comedy' },
+            { id: 6, name: 'Crime' },
+            { id: 7, name: 'Documentary' },
+            { id: 8, name: 'Drama' },
+            { id: 9, name: 'Fantasy' },
+            { id: 10, name: 'Film-Noir' },
+            { id: 11, name: 'Horror' },
+            { id: 12, name: 'Musical' },
+            { id: 13, name: 'Mystery' },
+            { id: 14, name: 'Romance' },
+            { id: 15, name: 'Sci-Fi' },
+            { id: 16, name: 'Thriller' },
+            { id: 17, name: 'War' },
+            { id: 18, name: 'Western' }
+        ]);
+        res.json(genres)
+
 
     },
 
@@ -69,6 +73,11 @@ module.exports = {
                 .skip(parseInt(page))
                 .limit(parseInt(limit))
                 .then(function (movies) {
+                    movies.forEach(function (movie) {
+
+                        movie.url_name = 'any string';
+                        console.log(movie.url_name);
+                    })
                     // return response with posts, total pages, and current page
                     res.status(200).send({ movies, page, limit });
                 });
@@ -118,9 +127,9 @@ module.exports = {
                     avg_rating: { $avg: "$rating" },
                     soma: { $sum: 1 }
                 },
-               
-                
-                
+
+
+
             }
 
 
@@ -150,7 +159,6 @@ module.exports = {
     },
 
 }
-
 
 
 
