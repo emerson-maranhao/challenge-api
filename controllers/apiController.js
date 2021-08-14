@@ -1,35 +1,58 @@
 const Movie = require("../models/movie");
 const Rating = require("../models/rating");
+const MovieDB = require('node-themoviedb');
+const dotenv = require("dotenv");
 
+dotenv.config()
+
+async function getMoviesFromDB(title, page = 1, limit = 30) {
+    const regex_title = new RegExp(title, 'i')
+    const pg = page
+    const li = limit
+    const movies = await Movie.find({ title: { $regex: regex_title } })
+        .skip(parseInt(pg)).limit(parseInt(li))
+    return movies
+}
+async function getImagePathFromTMDB(movie_id) {
+    const mdb = new MovieDB(process.env.KEY_TMDB);
+    if (movie_id == undefined) { return }
+    args = { pathParameters: { movie_id: movie_id } };
+    const tmdbDetails = await mdb.movie.getDetails(args)
+    return (tmdbDetails.data.poster_path)
+}
+function aggregateUrlMovie(movies, details) {
+    return movies.map((movie, index) => ({
+        ...movie._doc,
+        image_url: `${process.env.URL_BASE_TMDB}${details[index]}`
+    }))
+}
+async function getMoviesByYearAndGenreFromDB(year, genre, page = 1, limit = 30) {
+    const regex_year = new RegExp(parseInt(year), 'i')
+    if (year === undefined) {
+        const movies = await Movie.find({
+            genres: genre
+        }).skip(parseInt(page)).limit(parseInt(limit)).sort({ year: -1 })
+        return movies
+    }
+    else {
+        const movies = await Movie.find({
+            title: { $regex: regex_year },
+            genres: genre
+        }).skip(parseInt(page)).limit(parseInt(limit))
+        return movies
+    }
+
+}
 
 module.exports = {
 
-    //Return movie list by title
     async getMoviesByTitle(req, res) {
-
-        // configure regex to search by title contain query
-        // i for case insensitive
-        const regex_title = new RegExp(req.query.title, 'i')
-        const { page = 1, limit = 30 } = req.query;
-
-        try {
-            await Movie.find({
-                title: { $regex: regex_title }
-            })
-                .skip(parseInt(page))
-                .limit(parseInt(limit))
-                .then(function (movies) {
-                    res.status(200).send({ movies, page, limit });
-                });
-
-        } catch (err) {
-            //response message error
-            return res.status(500).send(err);
-        }
-
+        const movies = await getMoviesFromDB(req.query.title, req.query.page, req.query.limit)
+        const details = await Promise.all(movies.map(movie => getImagePathFromTMDB(movie.tmdbId)))
+        const result = aggregateUrlMovie(movies, details)
+        res.status(200).send(result);
     },
 
-    //Return genre list to use in dropdown
     async getGenres(req, res) {
         var genres = ([
             { id: 1, name: 'Action' },
@@ -56,55 +79,18 @@ module.exports = {
 
     },
 
-    //Return list movies by year and genres
     async getMoviesByYearByGenres(req, res) {
-        const { page = 1, limit = 30 } = req.query;
-        const regex_year = new RegExp(parseInt(req.query.year), 'i') // i for case insensitive
-
-
-        // return response with posts, total pages, and current page
-        if (req.query.year === undefined) {
-            try {
-                const movies = await Movie.find({
-                    genres: req.query.genres
-                }).skip(parseInt(page))
-                    .limit(parseInt(limit)).sort({ year: -1 })
-                // return response with posts, total pages, and current page
-                res.status(200).send({ movies, page, limit });
-
-
-            } catch (err) {
-                //return error response
-                return res.status(500).send(err);
-            }
-        }
-        else {
-
-            try {
-                const movies = await Movie.find({
-                    title: { $regex: regex_year },
-                    genres: req.query.genres
-                }).skip(parseInt(page))
-                    .limit(parseInt(limit))
-
-                // return response with posts, total pages, and current page
-                res.status(200).send({ movies, page, limit });
-
-
-            } catch (err) {
-                //return error response
-                return res.status(500).send(err);
-            }
-        }
-
+        const movies = await getMoviesByYearAndGenreFromDB(req.query.year, req.query.genres, req.query.page, req.query.limit)
+        const details = await Promise.all(movies.map(movie => getImagePathFromTMDB(movie.tmdbId)))
+        const result = aggregateUrlMovie(movies, details)
+        res.status(200).send(result);
 
     },
 
-    //Return list movies by rating
     async getMoviesByRating(req, res) {
 
         const { page = 1, limit = 10 } = req.query;
-        const regex_rating = new RegExp(parseInt(req.query.rating), 'i') // i for case insensitive
+        const regex_rating = new RegExp(parseInt(req.query.rating), 'i')
         try {
             const movies = await Rating.aggregate([{
                 "$group": {
@@ -116,7 +102,7 @@ module.exports = {
             {
                 '$facet': {
                     metadata: [{ $count: "total" }, { $addFields: { page: page } }],
-                    data: [{ $skip: (page - 1) * limit }, { $limit: limit * 1 }] // add projection here wish you re-shape the docs
+                    data: [{ $skip: (page - 1) * limit }, { $limit: limit * 1 }] 
                 }
             }
             ])
@@ -128,15 +114,4 @@ module.exports = {
             console.error(err.message);
         }
     },
-
 }
-
-
-
-
-
-
-
-
-
-
