@@ -12,7 +12,7 @@ const url = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}
 const connectionParams={ useNewUrlParser: true, useCreateIndex: true,useUnifiedTopology: true}
 
 mongoose.connect(url,connectionParams).then(() => {
-    console.log(" MongoDB is connected!")
+    console.log("MongoDB is connected!")
 }).catch((err) => {
     console.log("Error to connect in MongoDB" + err)
 })

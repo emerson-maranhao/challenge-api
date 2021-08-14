@@ -23,7 +23,7 @@ async function getImagePathFromTMDB(movie_id) {
 function aggregateUrlMovie(movies, details) {
     return movies.map((movie, index) => ({
         ...movie._doc,
-        image_url: `${process.env.URL_BASE_TMDB}${details[index]}`
+        image_url: `${details[index]== undefined?"null":`${process.env.URL_BASE_TMDB}${details[index]}`}`
     }))
 }
 async function getMoviesByYearAndGenreFromDB(year, genre, page = 1, limit = 30) {
