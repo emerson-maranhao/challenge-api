@@ -18,12 +18,38 @@ async function getImagePathFromTMDB(movie_id) {
     if (movie_id == undefined) { return }
     args = { pathParameters: { movie_id: movie_id } };
     const tmdbDetails = await mdb.movie.getDetails(args)
-    return (tmdbDetails.data.poster_path)
+    return (tmdbDetails.data)
+}
+async function getMoviesByRatingFromDB(rating, page = 1, limit = 30) {
+
+    const regex_rating = new RegExp(parseInt(rating), 'i')
+    const pg = page
+    const li = limit
+    const movies = await Rating.aggregate([{
+        "$group": {
+            _id: "$movieId",
+            avg_rating: { $avg: "$rating" },
+            soma: { $sum: 1 }
+        },
+            '$facet': {
+                metadata: [{ $count: "total" }, { $addFields: { page: pg } }],
+                data: [{ $skip: (pg - 1) * li }, { $li: li * 1 }]
+            }
+         }
+    
+    ])
+
+    return movies
+
 }
 function aggregateUrlMovie(movies, details) {
+    console.log(details)
     return movies.map((movie, index) => ({
         ...movie._doc,
-        image_url: `${details[index]== undefined?"null":`${process.env.URL_BASE_TMDB}${details[index]}`}`
+        image_url: `${details[index] == undefined ? "null" : `${process.env.URL_BASE_TMDB}${details[index].poster_path}`}`,
+        overview:`${details[index] == undefined ? "null" : `${details[index].overview}`}`,
+        popularity:`${details[index] == undefined ? "null" : `${details[index].popularity}`}`,
+        original_title:`${details[index] == undefined ? "null" : `${details[index].original_title}`}`
     }))
 }
 async function getMoviesByYearAndGenreFromDB(year, genre, page = 1, limit = 30) {
@@ -88,30 +114,12 @@ module.exports = {
     },
 
     async getMoviesByRating(req, res) {
-
-        const { page = 1, limit = 10 } = req.query;
-        const regex_rating = new RegExp(parseInt(req.query.rating), 'i')
-        try {
-            const movies = await Rating.aggregate([{
-                "$group": {
-                    _id: "$movieId",
-                    avg_rating: { $avg: "$rating" },
-                    soma: { $sum: 1 }
-                },
-            },
-            {
-                '$facet': {
-                    metadata: [{ $count: "total" }, { $addFields: { page: page } }],
-                    data: [{ $skip: (page - 1) * limit }, { $limit: limit * 1 }] 
-                }
-            }
-            ])
-            // return response with posts, total pages, and current page
-            res.json({
-                movies
-            });
-        } catch (err) {
-            console.error(err.message);
-        }
+        const movies = getMoviesByRatingFromDB(req.query.rating, req.query.page, req.query.limit)
+        .then(rating=>
+            console.log(rating)
+        )
+        // const details = await Promise.all(movies.map(movie => getImagePathFromTMDB(movie.tmdbId)))
+        // const result = aggregateUrlMovie(movies, details)
+        // res.status(200).send(result);
     },
 }
