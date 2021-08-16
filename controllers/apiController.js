@@ -20,36 +20,14 @@ async function getImagePathFromTMDB(movie_id) {
     const tmdbDetails = await mdb.movie.getDetails(args)
     return (tmdbDetails.data)
 }
-async function getMoviesByRatingFromDB(rating, page = 1, limit = 30) {
-
-    const regex_rating = new RegExp(parseInt(rating), 'i')
-    const pg = page
-    const li = limit
-    const movies = await Rating.aggregate([{
-        "$group": {
-            _id: "$movieId",
-            avg_rating: { $avg: "$rating" },
-            soma: { $sum: 1 }
-        },
-            '$facet': {
-                metadata: [{ $count: "total" }, { $addFields: { page: pg } }],
-                data: [{ $skip: (pg - 1) * li }, { $li: li * 1 }]
-            }
-         }
-    
-    ])
-
-    return movies
-
-}
 function aggregateUrlMovie(movies, details) {
     console.log(details)
     return movies.map((movie, index) => ({
         ...movie._doc,
         image_url: `${details[index] == undefined ? "null" : `${process.env.URL_BASE_TMDB}${details[index].poster_path}`}`,
-        overview:`${details[index] == undefined ? "null" : `${details[index].overview}`}`,
-        popularity:`${details[index] == undefined ? "null" : `${details[index].popularity}`}`,
-        original_title:`${details[index] == undefined ? "null" : `${details[index].original_title}`}`
+        overview: `${details[index] == undefined ? "null" : `${details[index].overview}`}`,
+        popularity: `${details[index] == undefined ? "null" : `${details[index].popularity.toFixed(2)}`}`,
+        original_title: `${details[index] == undefined ? "null" : `${details[index].original_title}`}`
     }))
 }
 async function getMoviesByYearAndGenreFromDB(year, genre, page = 1, limit = 30) {
@@ -66,6 +44,32 @@ async function getMoviesByYearAndGenreFromDB(year, genre, page = 1, limit = 30) 
             genres: genre
         }).skip(parseInt(page)).limit(parseInt(limit))
         return movies
+    }
+
+}
+async function getMoviesByRatingFromDB(rating, page = 1, limit = 30) {
+    try {
+
+        const regex_rating = new RegExp(parseInt(rating), 'i')
+        const pg = page
+        const li = limit
+        const movies = await Rating.aggregate([{
+            "$group": {
+                _id: "$movieId",
+                avg_rating: { $avg: "$rating" },
+                //soma: { $sum: 1 }
+            },
+            // '$facet': {
+            //     metadata: [{ $count: "total" }, { $addFields: { page: pg } }],
+            //     data: [{ $skip: (pg - 1) * li }, { $li: li * 1 }]
+            // }
+        }
+
+        ]).skip(parseInt(pg)).limit(parseInt(li))
+
+        return movies
+    } catch (error) {
+        console.log(SyntaxError)
     }
 
 }
@@ -114,12 +118,19 @@ module.exports = {
     },
 
     async getMoviesByRating(req, res) {
-        const movies = getMoviesByRatingFromDB(req.query.rating, req.query.page, req.query.limit)
-        .then(rating=>
-            console.log(rating)
-        )
-        // const details = await Promise.all(movies.map(movie => getImagePathFromTMDB(movie.tmdbId)))
-        // const result = aggregateUrlMovie(movies, details)
-        // res.status(200).send(result);
+        try {
+            
+        
+        const rating = getMoviesByRatingFromDB(req.query.rating, req.query.page, req.query.limit)
+            .then(rating =>
+                console.log(rating)
+            )
+
+       // const details = await Promise.all(rating.map(rating => getImagePathFromTMDB(rating._id)))
+        //const result = aggregateUrlMovie(movies, details)
+        res.status(200).send(rating);
+    } catch (error) {
+            console.log(error)
+    }
     },
 }
