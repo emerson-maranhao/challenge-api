@@ -4,24 +4,34 @@ const MovieDB = require('node-themoviedb');
 const dotenv = require("dotenv");
 
 dotenv.config()
+const mdb = new MovieDB(process.env.KEY_TMDB);
 
 async function getMoviesFromDB(title, page = 1, limit = 30) {
     const regex_title = new RegExp(title, 'i')
     const pg = page
     const li = limit
-    const movies = await Movie.find({ title: { $regex: regex_title } })
-        .skip(parseInt(pg)).limit(parseInt(li))
-    return movies
+    try {
+        const movies = await Movie.find({ title: { $regex: regex_title } })
+            .skip(parseInt(pg))
+            .limit(parseInt(li))
+        return movies
+    } catch (error) {
+        console.log(error)
+    }
+
 }
-async function getImagePathFromTMDB(movie_id) {
-    const mdb = new MovieDB(process.env.KEY_TMDB);
-    if (movie_id == undefined) { return }
-    args = { pathParameters: { movie_id: movie_id } };
-    const tmdbDetails = await mdb.movie.getDetails(args)
-    return (tmdbDetails.data)
+async function getDetailsFromTMDB(tmdbId) {
+    console.log(tmdbId)
+    try {
+        args = { pathParameters: { movie_id: tmdbId } };
+        const tmdbDetails = await mdb.movie.getDetails(args)
+        return (tmdbDetails.data)
+    } catch (error) {
+        console.log(`Error to get details from tmdbId ${tmdbId}` + error.message)
+    }
+
 }
 function aggregateUrlMovie(movies, details) {
-    console.log(details)
     return movies.map((movie, index) => ({
         ...movie._doc,
         image_url: `${details[index] == undefined ? "null" : `${process.env.URL_BASE_TMDB}${details[index].poster_path}`}`,
@@ -31,21 +41,24 @@ function aggregateUrlMovie(movies, details) {
     }))
 }
 async function getMoviesByYearAndGenreFromDB(year, genre, page = 1, limit = 30) {
-    const regex_year = new RegExp(parseInt(year), 'i')
-    if (year === undefined) {
-        const movies = await Movie.find({
-            genres: genre
-        }).skip(parseInt(page)).limit(parseInt(limit)).sort({ year: -1 })
-        return movies
+    const regex_genre = new RegExp(genre, 'i')
+    try {
+        if (year == undefined) {
+            const movies = await Movie.find({ genres: { $regex: regex_genre } })
+                .skip(parseInt(page))
+                .limit(parseInt(limit))
+                .sort({ year: -1 })
+            return movies
+        }
+        else {
+            const movies = await Movie.find({ year: year, genres: { $regex: regex_genre } })
+                .skip(parseInt(page))
+                .limit(parseInt(limit))
+            return movies
+        }
+    } catch (error) {
+        console.log(error.message)
     }
-    else {
-        const movies = await Movie.find({
-            title: { $regex: regex_year },
-            genres: genre
-        }).skip(parseInt(page)).limit(parseInt(limit))
-        return movies
-    }
-
 }
 async function getMoviesByRatingFromDB(rating, page = 1, limit = 30) {
     try {
@@ -77,13 +90,19 @@ async function getMoviesByRatingFromDB(rating, page = 1, limit = 30) {
 module.exports = {
 
     async getMoviesByTitle(req, res) {
-        const movies = await getMoviesFromDB(req.query.title, req.query.page, req.query.limit)
-        const details = await Promise.all(movies.map(movie => getImagePathFromTMDB(movie.tmdbId)))
-        const result = aggregateUrlMovie(movies, details)
-        res.status(200).send(result);
+        try {
+            const movies = await getMoviesFromDB(req.query.title, req.query.page, req.query.limit)
+            const details = await Promise.all(movies.map(movie => getDetailsFromTMDB(movie.tmdbId)))
+            const result = aggregateUrlMovie(movies, details)
+            res.status(200).send(result);
+        } catch (error) {
+            res.status(500).send(error.message);
+        }
+
     },
 
     async getGenres(req, res) {
+       
         var genres = ([
             { id: 1, name: 'Action' },
             { id: 2, name: 'Adventure' },
@@ -102,35 +121,35 @@ module.exports = {
             { id: 15, name: 'Sci-Fi' },
             { id: 16, name: 'Thriller' },
             { id: 17, name: 'War' },
-            { id: 18, name: 'Western' }
+            { id: 18, name: 'Western' },
+            { id: 19, name: 'no genres listed' }
         ]);
         res.json(genres)
-
-
     },
 
     async getMoviesByYearByGenres(req, res) {
-        const movies = await getMoviesByYearAndGenreFromDB(req.query.year, req.query.genres, req.query.page, req.query.limit)
-        const details = await Promise.all(movies.map(movie => getImagePathFromTMDB(movie.tmdbId)))
-        const result = aggregateUrlMovie(movies, details)
-        res.status(200).send(result);
-
+        try {
+            const movies = await getMoviesByYearAndGenreFromDB(req.query.year, req.query.genres, req.query.page, req.query.limit)
+            const details = await Promise.all(movies.map(movie => getDetailsFromTMDB(movie.tmdbId)))
+            const result = aggregateUrlMovie(movies, details)
+            res.status(200).send(result);
+        } catch (error) {
+            res.status(500).send(error.message);
+        }
     },
 
     async getMoviesByRating(req, res) {
         try {
-            
-        
-        const rating = getMoviesByRatingFromDB(req.query.rating, req.query.page, req.query.limit)
-            .then(rating =>
-                console.log(rating)
-            )
+            const rating = getMoviesByRatingFromDB(req.query.rating, req.query.page, req.query.limit)
+                .then(rating =>
+                    console.log(rating)
+                )
 
-       // const details = await Promise.all(rating.map(rating => getImagePathFromTMDB(rating._id)))
-        //const result = aggregateUrlMovie(movies, details)
-        res.status(200).send(rating);
-    } catch (error) {
+            // const details = await Promise.all(rating.map(rating => getImagePathFromTMDB(rating._id)))
+            //const result = aggregateUrlMovie(movies, details)
+            res.status(200).send(rating);
+        } catch (error) {
             console.log(error)
-    }
+        }
     },
 }
