@@ -35,8 +35,11 @@ function aggregateUrlMovie(movies, details) {
     return movies.map((movie, index) => ({
         ...movie._doc,
         image_url: `${details[index] == undefined ? "null" : `${process.env.URL_BASE_TMDB}${details[index].poster_path}`}`,
+        backdrop_path: `${details[index] == undefined ? "null" : `${process.env.URL_BASE_TMDB}${details[index].backdrop_path}`}`,
+        release_date:`${details[index] == undefined ? "null" : `${details[index].release_date}`}`,
         overview: `${details[index] == undefined ? "null" : `${details[index].overview}`}`,
-        popularity: `${details[index] == undefined ? "null" : `${details[index].popularity.toFixed(2)}`}`,
+        vote_average:details[index] == undefined ? "null" : Number(details[index].vote_average.toFixed(1)),
+        popularity: details[index] == undefined ? "null" : Number(details[index].popularity.toFixed()),
         original_title: `${details[index] == undefined ? "null" : `${details[index].original_title}`}`
     }))
 }
